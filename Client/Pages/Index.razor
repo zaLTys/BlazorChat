@@ -1,9 +1,83 @@
 ﻿@page "/"
+@inject NavigationManager _navigationManager
+@implements IAsyncDisposable
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Chat</PageTitle>
+<h3>Chat</h3>
 
-<h1>Hello, world!</h1>
+@if (!IsConnected)
+{
+    <div class="input-group">
+        <input @bind="_username" class="form-control" placeholder="Enter username here.." />
+        <button class="btn btn-primary form-control-append" @onclick="Connect">
+            Connect
+        </button>
+    </div>
+}
+else
+{
+    <textarea style="width: 100%; height: 600px;">
+        @_messages
+        </textarea>
+    <div class="input-group">
+        <input @bind-value="_message"
+           @bind-value:event="oninput"
+           @onkeyup="HandleInput"
+           class="form-control">
+        <button class="btn btn-primary form-control-append"
+                @onclick="Send"
+                disabled="@(!IsConnected)">
+            Send
+        </button>
+    </div>
+}
 
-Welcome to your new app.
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+    private HubConnection? _hubConnection;
+    private string _messages = string.Empty;
+    private string _username = string.Empty;
+    private string _message = string.Empty;
+
+    private async Task Connect()
+    {
+        _hubConnection = new HubConnectionBuilder().WithUrl(_navigationManager.ToAbsoluteUri(Constants.ChatHub)).Build();
+
+        _hubConnection.On<string, string>(Constants.ReceiveMessage, (user, message) =>
+        {
+            var msg = $"{(string.IsNullOrEmpty(user) ? "" : $"{user}: ")}{message}";
+            _messages += $"{msg} \n";
+            StateHasChanged();
+        });
+
+        await _hubConnection.StartAsync();
+    }
+
+    private async Task Send()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.SendAsync(Constants.HubMethodSendMessage, _username, _message);
+            _message = string.Empty;
+        }
+    }
+
+    private async Task HandleInput(KeyboardEventArgs args)
+    {
+        if (args.Key == null || args.Key.Equals("Enter"))
+        {
+            await Send();
+        }
+    }
+
+    public bool IsConnected => _hubConnection?.State == HubConnectionState.Connected;
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection != null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}

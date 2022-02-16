@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using BlazorChat.Shared;
+using Microsoft.AspNetCore.SignalR;
 
 namespace BlazorChat.Server.Hubs
 {
@@ -6,14 +7,13 @@ namespace BlazorChat.Server.Hubs
     {
         public override async Task OnConnectedAsync()
         {
-
             await SendMessage("", "User connected!");
             await base.OnConnectedAsync();
         }
 
         public async Task SendMessage(string user, string message)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            await Clients.All.SendAsync(Constants.ReceiveMessage, user, message);
         }
     }
 }

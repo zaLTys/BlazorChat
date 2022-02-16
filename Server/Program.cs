@@ -1,4 +1,5 @@
 using BlazorChat.Server.Hubs;
+using BlazorChat.Shared;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
 
@@ -43,7 +44,7 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 
-app.MapHub<ChatHub>("/chathub");
+app.MapHub<ChatHub>(Constants.ChatHub);
 
 app.MapFallbackToFile("index.html");
 
