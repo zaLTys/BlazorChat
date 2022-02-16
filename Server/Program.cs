@@ -44,7 +44,7 @@ app.UseRouting();
 app.MapRazorPages();
 app.MapControllers();
 
-app.MapHub<ChatHub>(Constants.ChatHub);
+app.MapHub<ChatHub>(Constants.ChatHubBase);
 
 app.MapFallbackToFile("index.html");
 

@@ -9,7 +9,8 @@ namespace BlazorChat.Shared
     public static class Constants
     {
         public const string ReceiveMessage = "ReceiveMessage";
-        public const string ChatHub = "/chathub";
+        public const string ChatHubBase = "/chathub";
+        public const string ChatHubWithUsername = $"{ChatHubBase}?username=";
 
         public const string HubMethodSendMessage = "SendMessage";
     }
