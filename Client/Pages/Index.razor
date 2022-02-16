@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject NavigationManager _navigationManager
+@inject IJSRuntime JSRuntime
 @implements IAsyncDisposable
 
 <PageTitle>Chat</PageTitle>
@@ -8,7 +9,8 @@
 @if (!IsConnected)
 {
     <div class="input-group">
-        <input @bind="_username" class="form-control" placeholder="Enter username here.." />
+        <input @bind-value="_username" @bind-value:event="oninput" @onkeyup="HandleInput"
+           class="form-control" placeholder="Enter username here.." />
         <button class="btn btn-primary form-control-append" @onclick="Connect">
             Connect
         </button>
@@ -16,17 +18,17 @@
 }
 else
 {
-    <textarea style="width: 100%; height: 600px;">
+    <textarea style="width: 100%; height: 600px;" @ref="_textAreaRef">
         @_messages
-        </textarea>
+            </textarea>
     <div class="input-group">
         <input @bind-value="_message"
            @bind-value:event="oninput"
            @onkeyup="HandleInput"
            class="form-control">
         <button class="btn btn-primary form-control-append"
-                @onclick="Send"
-                disabled="@(!IsConnected)">
+            @onclick="Send"
+            disabled="@(!IsConnected)">
             Send
         </button>
     </div>
@@ -40,6 +42,8 @@ else
     private string _username = string.Empty;
     private string _message = string.Empty;
 
+    ElementReference _textAreaRef;
+
     private async Task Connect()
     {
         _hubConnection = new HubConnectionBuilder()
@@ -50,6 +54,7 @@ else
         {
             var msg = $"{(string.IsNullOrEmpty(user) ? "" : $"{user}: ")}{message}";
             _messages += $"{msg} \n";
+            JSRuntime.InvokeVoidAsync("scrollToBottom", _textAreaRef);
             StateHasChanged();
         });
 
@@ -67,9 +72,13 @@ else
 
     private async Task HandleInput(KeyboardEventArgs args)
     {
-        if (args.Key == null || args.Key.Equals("Enter"))
+        if (args?.Key == null || args.Key.Equals("Enter"))
         {
-            await Send();
+            if (IsConnected)
+                await Send();
+            else
+                await Connect();
+
         }
     }
 
