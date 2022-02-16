@@ -13,6 +13,7 @@ namespace BlazorChat.Server.Hubs
             var username = Context.GetHttpContext().Request.Query["username"];
             Users.Add(Context.ConnectionId, username);
             await SendMessage(string.Empty, $"{username} connected");
+            await Clients.Caller.SendAsync("FocusOnInput");
             await base.OnConnectedAsync();
         }
 

@@ -18,13 +18,15 @@
 }
 else
 {
-    <textarea style="width: 100%; height: 600px;" @ref="_textAreaRef">
+    <textarea style="width: 100%; height: 600px;" @ref="_textAreaRef" disabled="@(!IsConnected)">
         @_messages
-            </textarea>
+                </textarea>
     <div class="input-group">
-        <input @bind-value="_message"
+        <input @ref="_messageInputRef"
+           @bind-value="_message"
            @bind-value:event="oninput"
            @onkeyup="HandleInput"
+           disabled="@(!IsConnected)"
            class="form-control">
         <button class="btn btn-primary form-control-append"
             @onclick="Send"
@@ -34,8 +36,6 @@ else
     </div>
 }
 
-
-
 @code {
     private HubConnection? _hubConnection;
     private string _messages = string.Empty;
@@ -43,12 +43,18 @@ else
     private string _message = string.Empty;
 
     ElementReference _textAreaRef;
+    ElementReference _messageInputRef;
 
     private async Task Connect()
     {
         _hubConnection = new HubConnectionBuilder()
             .WithUrl(_navigationManager.ToAbsoluteUri($"{Constants.ChatHubWithUsername}{_username}"))
             .Build();
+
+        _hubConnection.On("FocusOnInput", async () =>
+        {
+            await _messageInputRef.FocusAsync();
+        });
 
         _hubConnection.On<string, string>(Constants.ReceiveMessage, (user, message) =>
         {
@@ -77,8 +83,9 @@ else
             if (IsConnected)
                 await Send();
             else
+            {
                 await Connect();
-
+            }
         }
     }
 
